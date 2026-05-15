@@ -310,7 +310,12 @@ class ModernApplication:
             else:
                 speech_text = text
 
-            lang = 'en' if self.current_language == 'en_US' else 'kn'
+            if self.current_language == 'en_US':
+                lang = 'en'
+            elif self.current_language == 'kn_IN':
+                lang = 'kn'
+            else:
+                lang = 'hi'
             tts = gTTS(text=speech_text, lang=lang, slow=False)
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
                 tts.save(fp.name)
@@ -321,6 +326,10 @@ class ModernApplication:
             pygame.mixer.music.load(temp_audio_file)
             pygame.mixer.music.play()
             
+            # Wait for the music to finish playing
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
+
             # Clean up the temporary file
             os.remove(temp_audio_file)
         except Exception as e:
@@ -412,6 +421,9 @@ class ModernApplication:
         current_text = self.lblWords["text"] + most_common
         self.lblWords.config(text=current_text)
         
+        # TODO: The word suggestion feature is currently only available for English.
+        # The pyenchant library used for this feature does not have dictionary support for Hindi and Kannada.
+        # To enable this feature for other languages, a different library or a custom suggestion engine would be needed.
         # Get word suggestions only for English
         if self.d and self.current_language == "en_US" and self.d.check(current_text):
             suggestions = self.d.suggest(current_text)

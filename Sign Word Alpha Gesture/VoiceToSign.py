@@ -176,41 +176,36 @@ class VoiceToSignApp:
         kannada_chars_to_ignore = ['್', 'ಾ', 'ಿ', 'ೀ', 'ು', 'ೂ', 'ೃ', 'ೆ', 'ೇ', 'ೈ', 'ೊ', 'ೋ', 'ೌ', 'ಂ', 'ಃ']
         hindi_chars_to_ignore = ['्', 'ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'े', 'ै', 'ो', 'ौ', 'ं', 'ः']
 
-        
-        # Determine the base directory for images based on the selected language
-        if selected_language == "Kannada":
-            base_image_dir = os.path.join(script_dir, 'Kannada Output')
-        elif selected_language == "Hindi":
-            base_image_dir = os.path.join(script_dir, 'Hindi Output2')
-        else:
-            base_image_dir = os.path.join(script_dir, 'dataset')
-
         for char in text:
-             if not char.strip(): continue # Skip spaces
-
-             if selected_language == "Kannada":
-                if char in kannada_chars_to_ignore: continue # Skip specific Kannada vowel signs/modifiers
-                image_name = f"{char}.jpeg"
-             elif selected_language == "Hindi":
-                if char in hindi_chars_to_ignore: continue
-                image_name = f"{char}.jpeg"
-             else: # English
-                image_name = f"{char}.jpeg"
+            if not char.strip(): continue # Skip spaces
             
-             image_path = os.path.join(base_image_dir, image_name)
-             
-             if os.path.exists(image_path):
-                 image_paths.append(image_path)
-             else:
-                 # Provide more informative error message
-                 if selected_language == "Kannada":
-                     print(f"Image not found for Kannada character '{char.encode('unicode_escape').decode('ascii')}' at path: {image_path}")
-                 elif selected_language == "Hindi":
-                        print(f"Image not found for Hindi character '{char.encode('unicode_escape').decode('ascii')}' at path: {image_path}")
-                 else:
-                     print(f"Image not found for English character '{char}' at path: {image_path}")
-
-
+            image_path = None
+            if selected_language == "Kannada":
+                if char in kannada_chars_to_ignore: continue
+                char_folder = os.path.join(script_dir, 'Kannada Dataset', char)
+                if os.path.isdir(char_folder):
+                    images_in_folder = [f for f in os.listdir(char_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                    if images_in_folder:
+                        image_path = os.path.join(char_folder, images_in_folder[0])
+            elif selected_language == "Hindi":
+                if char in hindi_chars_to_ignore: continue
+                char_folder = os.path.join(script_dir, 'HindiSignImages', char)
+                if os.path.isdir(char_folder):
+                    images_in_folder = [f for f in os.listdir(char_folder) if f.lower().endswith(('.png', 'jpg', 'jpeg'))]
+                    if images_in_folder:
+                        image_path = os.path.join(char_folder, images_in_folder[0])
+            else: # English
+                image_path = os.path.join(script_dir, f"dataset/{char}.jpeg")
+            
+            if image_path and os.path.exists(image_path):
+                image_paths.append(image_path)
+            else:
+                if selected_language == "Kannada":
+                    print(f"Image not found for Kannada character '{char.encode('unicode_escape').decode('ascii')}' at path: {image_path}")
+                elif selected_language == "Hindi":
+                    print(f"Image not found for Hindi character '{char.encode('unicode_escape').decode('ascii')}' at path: {image_path}")
+                else:
+                    print(f"Image not found for English character '{char}' at path: {image_path}")
 
         if not image_paths:
             self.status_label.config(text="No signs to display for that word.")

@@ -289,6 +289,10 @@ class SignLanguageViewer:
                 pygame.mixer.music.load(temp_audio_file)
                 pygame.mixer.music.play()
 
+                # Wait for the music to finish playing
+                while pygame.mixer.music.get_busy():
+                    pygame.time.Clock().tick(10)
+
                 # Clean up the temporary file
                 os.remove(temp_audio_file)
             except Exception as e:
@@ -330,25 +334,45 @@ class SignLanguageViewer:
             return
         
         found_any = False
-        chars = [char for char in text if char.isalnum()]
+
+        selected_language = self.lang_var.get()
+
+        kannada_chars_to_ignore = ['್', 'ಾ', 'ಿ', 'ೀ', 'ು', 'ೂ', 'ೃ', 'ೆ', 'ೇ', 'ೈ', 'ೊ', 'ೋ', 'ೌ', 'ಂ', 'ಃ']
+        hindi_chars_to_ignore = ['्', 'ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'े', 'ै', 'ो', 'ौ', 'ं', 'ः']
+        
+        chars = []
+        for char in text:
+            if not char.strip(): continue
+            if selected_language == "Kannada":
+                if char in kannada_chars_to_ignore: continue
+            elif selected_language == "Hindi":
+                if char in hindi_chars_to_ignore: continue
+            
+            chars.append(char)
         
         # Calculate grid positions
         cols = 5  # Number of columns in the grid
-        
-        selected_language = self.lang_var.get()
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
         for i, char in enumerate(chars):
             try:
+                image_path = None
                 if selected_language == "Kannada":
-                     # For Kannada, we use the character directly as filename if possible
-                     image_path = os.path.join(script_dir, f"Kannada Output/{char}.jpeg")
+                    char_folder = os.path.join(script_dir, 'Kannada Dataset', char)
+                    if os.path.isdir(char_folder):
+                        images_in_folder = [f for f in os.listdir(char_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                        if images_in_folder:
+                            image_path = os.path.join(char_folder, images_in_folder[0])
                 elif selected_language == "Hindi":
-                    image_path = os.path.join(script_dir, f"Hindi Output2/{char}.jpeg")
+                    char_folder = os.path.join(script_dir, 'HindiSignImages', char)
+                    if os.path.isdir(char_folder):
+                        images_in_folder = [f for f in os.listdir(char_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                        if images_in_folder:
+                            image_path = os.path.join(char_folder, images_in_folder[0])
                 else:
-                     image_path = os.path.join(script_dir, f"dataset/{char}.jpeg")
+                    image_path = os.path.join(script_dir, f"dataset/{char}.jpeg")
 
-                if os.path.exists(image_path):
+                if image_path and os.path.exists(image_path):
                     found_any = True
                     
                     # Calculate row and column position
@@ -365,7 +389,7 @@ class SignLanguageViewer:
                     card = ImageCard(self.scrollable_frame, photo, char)
                     card.grid(row=row, column=col, padx=10, pady=10)
                 else:
-                     print(f"Image not found: {image_path}")
+                     print(f"Image not found for character '{char}' in language '{selected_language}'")
                     
             except Exception as e:
                 print(f"Error loading image for '{char}': {e}")
