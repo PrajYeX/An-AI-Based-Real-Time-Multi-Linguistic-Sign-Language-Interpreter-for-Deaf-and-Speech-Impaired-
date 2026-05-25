@@ -1,13 +1,9 @@
 import sys
 import os.path
 import threading
-try:
-    import tkinter as tk
-    from tkinter import ttk
-    from tkinter import font as tkfont
-except ImportError:
-    import Tkinter as tk
-    import ttk
+import tkinter as tk
+from tkinter import ttk
+from tkinter import font as tkfont
 import WebCam
 from WordToSign import main as WordToSign_main
 from gesture.GestureCamera import detect as GestureCameraDetector
